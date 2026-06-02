@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pipes — CI/CD Pipeline Simulator</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ═══════════════════════════  AUTH SCREEN  ═══════════════════════════════ -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">Pipes</span>
+    </div>
+    <p class="auth-tagline">CI/CD Pipeline Simulator</p>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-login"    onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn"        id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="form-login" class="auth-form">
+      <div class="field">
+        <label>Username</label>
+        <input id="login-username" type="text" placeholder="your_username" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div id="login-error" class="form-error hidden"></div>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- Register form -->
+    <div id="form-register" class="auth-form hidden">
+      <div class="field">
+        <label>Username</label>
+        <input id="reg-username" type="text" placeholder="your_username" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input id="reg-email" type="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input id="reg-password" type="password" placeholder="min 6 characters" autocomplete="new-password" />
+      </div>
+      <div id="register-error" class="form-error hidden"></div>
+      <button class="btn btn-primary btn-full" onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════  APP SHELL  ═════════════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">Pipes</span>
+    </div>
+
+    <ul class="nav-links">
+      <li><a href="#" class="nav-link active" data-view="dashboard" onclick="navigate('dashboard')">
+        <span class="nav-icon">◈</span> Dashboard
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="pipelines" onclick="navigate('pipelines')">
+        <span class="nav-icon">⬡</span> Pipelines
+      </a></li>
+      <li><a href="#" class="nav-link" data-view="runs" onclick="navigate('runs')">
+        <span class="nav-icon">▷</span> Recent Runs
+      </a></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <span id="sidebar-username">user</span>
+      </div>
+      <button class="btn-ghost" onclick="doLogout()" title="Sign out">⎋</button>
+    </div>
+  </nav>
+
+  <!-- Main content area -->
+  <main class="main-content">
+
+    <!-- ── Dashboard ── -->
+    <div id="view-dashboard" class="view active">
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="page-sub" id="dashboard-greeting">Welcome back!</p>
+        </div>
+        <button class="btn btn-primary" onclick="navigate('pipelines'); openCreateModal()">
+          + New Pipeline
+        </button>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Runs</div>
+          <div class="stat-value" id="stat-total">—</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Successful</div>
+          <div class="stat-value" id="stat-success">—</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Failed</div>
+          <div class="stat-value" id="stat-failed">—</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Success Rate</div>
+          <div class="stat-value" id="stat-rate">—</div>
+        </div>
+      </div>
+
+      <!-- Recent runs feed -->
+      <div class="section-header">
+        <h2>Recent Runs</h2>
+      </div>
+      <div id="recent-runs-list" class="run-list">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ── Pipelines ── -->
+    <div id="view-pipelines" class="view hidden">
+      <div class="page-header">
+        <div>
+          <h1>Pipelines</h1>
+          <p class="page-sub">Define and manage your CI/CD pipelines</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateModal()">+ New Pipeline</button>
+      </div>
+
+      <!-- Search bar -->
+      <div class="search-bar">
+        <input id="pipeline-search" type="text" placeholder="Search pipelines…"
+               oninput="debouncedSearch(this.value)" />
+      </div>
+
+      <div id="pipeline-list" class="pipeline-grid">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ── Recent Runs ── -->
+    <div id="view-runs" class="view hidden">
+      <div class="page-header">
+        <h1>Recent Runs</h1>
+      </div>
+      <div id="all-runs-list" class="run-list">
+        <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ── Run Detail ── -->
+    <div id="view-run-detail" class="view hidden">
+      <div class="page-header">
+        <button class="btn btn-ghost" onclick="history.back(); navigate('runs')">← Back</button>
+        <div>
+          <h1 id="run-detail-title">Run #—</h1>
+          <p class="page-sub" id="run-detail-pipeline">—</p>
+        </div>
+        <span id="run-detail-badge" class="status-badge">—</span>
+      </div>
+
+      <div id="run-stage-list"></div>
+
+      <!-- Log output -->
+      <div class="section-header"><h2>Run Log</h2></div>
+      <pre id="run-log" class="log-panel">Loading…</pre>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════  MODALS  ════════════════════════════════════ -->
+
+<!-- Create / Edit Pipeline Modal -->
+<div id="modal-pipeline" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">New Pipeline</h2>
+      <button class="modal-close" onclick="closePipelineModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="field">
+        <label>Pipeline Name *</label>
+        <input id="p-name" type="text" placeholder="e.g. Backend CI" />
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <input id="p-desc" type="text" placeholder="Optional description" />
+      </div>
+      <div class="field">
+        <label>Target Branch</label>
+        <input id="p-branch" type="text" placeholder="main" value="main" />
+      </div>
+
+      <!-- Dynamic stages builder -->
+      <div class="section-header" style="margin-top:1.5rem">
+        <h3>Stages</h3>
+        <button class="btn btn-sm btn-ghost" onclick="addStage()">+ Add Stage</button>
+      </div>
+      <div id="stages-builder"></div>
+      <div id="modal-error" class="form-error hidden"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePipelineModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePipeline()">Save Pipeline</button>
+    </div>
+  </div>
+</div>
+
+<!-- Run Detail Modal (quick view) -->
+<div id="modal-run" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="run-modal-title">Run Detail</h2>
+      <button class="modal-close" onclick="document.getElementById('modal-run').classList.add('hidden')">✕</button>
+    </div>
+    <div class="modal-body" id="run-modal-body">Loading…</div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast-container"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
