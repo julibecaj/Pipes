@@ -369,6 +369,8 @@ async function triggerPipeline(id) {
   try {
     const run = await api('POST', `/pipelines/${id}/runs`);
     toast('Pipeline triggered! Run #' + run.id, 'success');
+    loadPipelines();
+    loadDashboard();
     // If on dashboard, refresh
     if (document.getElementById('view-dashboard').classList.contains('active')) {
       setTimeout(loadDashboard, 1000);
@@ -423,6 +425,7 @@ function renderRunList(containerId, runs) {
     document.getElementById(containerId).innerHTML = emptyState('No runs to display.');
     return;
   }
+
   document.getElementById(containerId).innerHTML = runs.map(r => `
     <div class="run-row" onclick="openRunDetail(${r.id})">
       <div class="run-status-dot dot-${r.status}"></div>
@@ -430,8 +433,43 @@ function renderRunList(containerId, runs) {
         <div class="run-pipeline-name">${esc(r.pipelineName)} <span style="color:var(--text-3);font-weight:400">#${r.id}</span></div>
         <div class="run-meta">${timeAgo(r.startedAt)} · ${r.finishedAt ? duration(r.startedAt, r.finishedAt) : 'running…'}</div>
       </div>
-      <span class="status-badge badge-${r.status}">${r.status}</span>
+
+      <div style="display:flex;align-items:center;gap:0.5rem" onclick="event.stopPropagation()">
+        <span class="status-badge badge-${r.status}">${r.status}</span>
+
+        ${['PENDING', 'RUNNING'].includes(r.status)
+          ? `<button class="btn btn-sm btn-ghost" onclick="cancelRun(${r.id})">Stop</button>`
+          : ''}
+
+        <button class="btn btn-sm btn-ghost" onclick="deleteRun(${r.id})" style="color:var(--red)">Delete</button>
+      </div>
     </div>`).join('');
+}
+
+async function cancelRun(id) {
+  if (!confirm(`Stop run #${id}?`)) return;
+
+  try {
+    await api('POST', `/runs/${id}/cancel`);
+    toast('Run cancelled.', 'info');
+    loadRecentRuns();
+    loadDashboard();
+  } catch (err) {
+    toast('Cancel failed: ' + err.message, 'error');
+  }
+}
+
+async function deleteRun(id) {
+  if (!confirm(`Delete run #${id}?`)) return;
+
+  try {
+    await api('DELETE', `/runs/${id}`);
+    toast('Run deleted.', 'info');
+    loadRecentRuns();
+    loadDashboard();
+  } catch (err) {
+    toast('Delete failed: ' + err.message, 'error');
+  }
 }
 
 /* ── Run Detail ─────────────────────────────────────────────────────────────── */
