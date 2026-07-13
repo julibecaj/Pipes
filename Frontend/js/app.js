@@ -4,7 +4,7 @@
    Open index.html with Live Server in VS Code (port 5500).
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const API = 'http://localhost:8080/api';
+const API = 'https://mini-ci-cd-pipeline-simulator.onrender.com';
 const API_ORIGIN = API.replace(/\/api$/, '');
 
 /* ── State ─────────────────────────────────────────────────────────────────── */
