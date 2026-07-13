@@ -78,6 +78,9 @@
       <li><a href="#" class="nav-link" data-view="runs" onclick="navigate('runs')">
         <span class="nav-icon">▷</span> Recent Runs
       </a></li>
+      <li><a href="#" class="nav-link" data-view="static-preview" onclick="navigate('static-preview')">
+        <span class="nav-icon">&lt;/&gt;</span> Static Preview
+      </a></li>
     </ul>
 
     <div class="sidebar-footer">
@@ -161,6 +164,98 @@
       </div>
       <div id="all-runs-list" class="run-list">
         <div class="empty-state">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Static Preview -->
+    <div id="view-static-preview" class="view hidden">
+      <div class="page-header">
+        <div>
+          <h1>Static Preview</h1>
+          <p class="page-sub">Run small HTML, CSS, and JavaScript projects</p>
+        </div>
+        <div class="preview-actions">
+          <a id="static-preview-link" class="btn btn-ghost hidden" href="#" target="_blank" rel="noopener">
+            Open Preview
+          </a>
+          <button id="static-preview-run" class="btn btn-primary" onclick="runStaticPreview()">
+            Run Preview
+          </button>
+        </div>
+      </div>
+
+      <div class="static-preview-shell">
+        <div class="editor-grid">
+          <div class="code-editor html-editor">
+            <div class="code-editor-header">
+              <span>index.html</span>
+              <span class="editor-lang">HTML</span>
+            </div>
+            <textarea id="static-html" spellcheck="false" placeholder="Write your HTML here..."><main class="demo-card">
+  <p class="eyebrow">Pipes Static Preview</p>
+  <h1>Ship a tiny static app</h1>
+  <p>Edit the HTML, CSS, and JavaScript, then run a backend-hosted preview.</p>
+  <button id="launch">Launch</button>
+</main></textarea>
+          </div>
+
+          <div class="code-editor">
+            <div class="code-editor-header">
+              <span>style.css</span>
+              <span class="editor-lang">CSS</span>
+            </div>
+            <textarea id="static-css" spellcheck="false" placeholder="Write your CSS here...">body {
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  background: #08110b;
+  color: #d4edda;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.demo-card {
+  width: min(560px, calc(100vw - 32px));
+  padding: 32px;
+  border: 1px solid #254025;
+  background: #0b100b;
+}
+
+.eyebrow {
+  color: #22c55e;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+}
+
+button {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 0;
+  background: #22c55e;
+  color: #061006;
+  font-weight: 700;
+}</textarea>
+          </div>
+
+          <div class="code-editor">
+            <div class="code-editor-header">
+              <span>script.js</span>
+              <span class="editor-lang">JS</span>
+            </div>
+            <textarea id="static-js" spellcheck="false" placeholder="Write your JavaScript here...">document.getElementById('launch')?.addEventListener('click', () => {
+  alert('Static preview is running.');
+});</textarea>
+          </div>
+        </div>
+
+        <div id="static-preview-error" class="form-error hidden"></div>
+        <div id="static-preview-result" class="preview-result hidden">
+          <div>
+            <div class="preview-result-title">Preview ready</div>
+            <div id="static-preview-url" class="preview-url"></div>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -5,6 +5,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const API = 'http://localhost:8080/api';
+const API_ORIGIN = API.replace(/\/api$/, '');
 
 /* ── State ─────────────────────────────────────────────────────────────────── */
 let token       = localStorage.getItem('pipes_token') || null;
@@ -418,6 +419,72 @@ async function loadRecentRuns() {
   } catch (err) {
     listEl.innerHTML = emptyState('Could not load runs: ' + err.message);
   }
+}
+
+/* ── Static Preview ───────────────────────────────────────────────────────── */
+async function runStaticPreview() {
+  clearError('static-preview-error');
+  hideStaticPreviewResult();
+
+  const html = document.getElementById('static-html')?.value || '';
+  const css  = document.getElementById('static-css')?.value || '';
+  const js   = document.getElementById('static-js')?.value || '';
+
+  if (!html.trim() && !css.trim() && !js.trim()) {
+    showError('static-preview-error', 'Add at least one HTML, CSS, or JavaScript file before running a preview.');
+    return;
+  }
+
+  setStaticPreviewLoading(true);
+
+  try {
+    const preview = await api('POST', '/static-preview', { html, css, js });
+    if (!preview?.previewUrl) {
+      throw new Error('Preview was created, but the server did not return a preview URL.');
+    }
+
+    const fullUrl = new URL(preview.previewUrl, API_ORIGIN).href;
+    showStaticPreviewResult(fullUrl);
+    toast('Static preview created.', 'success');
+  } catch (err) {
+    showError('static-preview-error', err.message || 'Could not create static preview.');
+  } finally {
+    setStaticPreviewLoading(false);
+  }
+}
+
+function setStaticPreviewLoading(isLoading) {
+  const btn = document.getElementById('static-preview-run');
+  if (!btn) return;
+
+  btn.disabled = isLoading;
+  btn.textContent = isLoading ? 'Running...' : 'Run Preview';
+}
+
+function showStaticPreviewResult(url) {
+  const link = document.getElementById('static-preview-link');
+  const result = document.getElementById('static-preview-result');
+  const urlEl = document.getElementById('static-preview-url');
+
+  if (link) {
+    link.href = url;
+    link.classList.remove('hidden');
+  }
+  if (urlEl) urlEl.textContent = url;
+  if (result) result.classList.remove('hidden');
+}
+
+function hideStaticPreviewResult() {
+  const link = document.getElementById('static-preview-link');
+  const result = document.getElementById('static-preview-result');
+  const urlEl = document.getElementById('static-preview-url');
+
+  if (link) {
+    link.href = '#';
+    link.classList.add('hidden');
+  }
+  if (urlEl) urlEl.textContent = '';
+  if (result) result.classList.add('hidden');
 }
 
 function renderRunList(containerId, runs) {
